@@ -2,6 +2,8 @@
 
 A lightweight macOS menu bar app that keeps your clipboard history, inspired by Windows' built-in clipboard history (Win+V).
 
+[中文文档](README_CN.md)
+
 ![macOS](https://img.shields.io/badge/macOS-13.0%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)

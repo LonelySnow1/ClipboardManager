@@ -38,6 +38,7 @@ struct ClipboardPanelView: View {
                 .cornerRadius(6)
                 .padding(.horizontal, 12)
                 .padding(.bottom, 8)
+                .focusable(false)
 
             Divider()
 

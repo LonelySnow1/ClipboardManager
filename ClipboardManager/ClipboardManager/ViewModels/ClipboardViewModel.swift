@@ -56,7 +56,7 @@ class ClipboardViewModel: ObservableObject {
     }
 
     private func simulatePaste() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             let source = CGEventSource(stateID: .hidSystemState)
 
             let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
