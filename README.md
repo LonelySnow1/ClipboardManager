@@ -12,6 +12,9 @@ A lightweight macOS menu bar app that keeps your clipboard history, inspired by 
 
 - **Clipboard History** — Automatically saves your last 50 copied text items
 - **Global Hotkey** — Press `⌘⇧V` to instantly bring up the clipboard panel
+- **Non-activating Floating Panel** — Panel does not steal focus from the active input field
+- **Position Near Input** — Panel appears next to the focused input element, like Windows clipboard
+- **Continuous Paste** — Panel stays open after pasting, allowing multiple items to be pasted in sequence
 - **Menu Bar App** — Lives quietly in your menu bar, no Dock icon
 - **Quick Paste** — Click any item to paste it into the active app
 - **Search** — Filter through your clipboard history
@@ -48,7 +51,7 @@ A lightweight macOS menu bar app that keeps your clipboard history, inspired by 
 ### Build from Source
 
 ```bash
-git clone https://github.com/yourusername/ClipboardManager.git
+git clone https://github.com/LonelySnow1/ClipboardManager.git
 cd ClipboardManager
 swift build -c release
 ```
@@ -74,6 +77,7 @@ On first launch, macOS will ask you to grant **Accessibility** permission:
 This permission is required for:
 - Global hotkey (`⌘⇧V`) to work system-wide
 - Auto-paste functionality (simulates `⌘V` after selecting an item)
+- Reading focused input element position via Accessibility API
 
 ## Usage
 
@@ -81,18 +85,19 @@ This permission is required for:
 |--------|-----|
 | Open clipboard panel | Click menu bar icon or press `⌘⇧V` |
 | Paste an item | Click on it in the panel |
+| Paste multiple items | Keep clicking — panel stays open |
 | Delete an item | Hover and click the `✕` button |
 | Search history | Type in the search field |
 | Clear all history | Click "Clear All" |
-| Settings | Right-click menu bar icon > Settings |
 
 ## Project Structure
 
 ```
-ClipboardManager/
 ├── Package.swift
+├── README.md
+├── README_CN.md
 └── ClipboardManager/
-    ├── ClipboardManagerApp.swift       # App entry point & MenuBarExtra
+    ├── ClipboardManagerApp.swift       # App entry point, NSPanel & positioning
     ├── Models/
     │   └── ClipboardItem.swift         # Data model
     ├── Services/
@@ -100,7 +105,7 @@ ClipboardManager/
     │   ├── HotKeyManager.swift         # Global ⌘⇧V hotkey (Carbon API)
     │   └── StorageManager.swift        # UserDefaults persistence
     ├── ViewModels/
-    │   └── ClipboardViewModel.swift    # Business logic
+    │   └── ClipboardViewModel.swift    # Business logic & paste simulation
     └── Views/
         ├── ClipboardPanelView.swift    # Main floating panel
         ├── ClipboardItemRow.swift      # List row component

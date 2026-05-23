@@ -8,7 +8,7 @@ let package = Package(
         .executableTarget(
             name: "ClipboardManager",
             path: "ClipboardManager",
-            exclude: ["Resources/Info.plist", "Resources/ClipboardManager.entitlements"]
+            exclude: ["Resources/Info.plist", "Resources/ClipboardManager.entitlements", "Tests"]
         )
     ]
 )

@@ -2,6 +2,8 @@
 
 一个轻量级的 macOS 菜单栏剪切板历史管理工具，灵感来自 Windows 内置的剪切板历史功能（Win+V）。
 
+[English](README.md)
+
 ![macOS](https://img.shields.io/badge/macOS-13.0%2B-blue)
 ![Swift](https://img.shields.io/badge/Swift-5.9-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -10,6 +12,9 @@
 
 - **剪切板历史** — 自动保存最近 50 条复制的文本内容
 - **全局快捷键** — 按 `⌘⇧V` 即可呼出剪切板面板
+- **不抢焦点的浮动面板** — 面板不会从活跃输入框抢走焦点
+- **智能定位** — 面板自动出现在当前聚焦输入框附近，像 Windows 剪切板一样
+- **连续粘贴** — 粘贴后面板保持打开，可依次粘贴多条内容
 - **菜单栏驻留** — 安静地住在菜单栏，不占用 Dock
 - **一键粘贴** — 点击任意历史条目自动粘贴到当前应用
 - **搜索过滤** — 快速在历史记录中搜索内容
@@ -72,6 +77,7 @@ swift run
 该权限用于：
 - 全局快捷键 `⌘⇧V` 在任意应用中生效
 - 选中条目后自动模拟 `⌘V` 完成粘贴
+- 通过 Accessibility API 读取聚焦输入框位置
 
 ## 使用方法
 
@@ -79,6 +85,7 @@ swift run
 |------|------|
 | 呼出剪切板面板 | 点击菜单栏图标 或 按 `⌘⇧V` |
 | 粘贴历史条目 | 点击对应条目 |
+| 连续粘贴多条 | 持续点击 — 面板保持打开 |
 | 删除某条记录 | 鼠标悬停后点击 `✕` |
 | 搜索历史记录 | 在搜索框中输入关键词 |
 | 清空所有记录 | 点击右上角 "Clear All" |
@@ -87,10 +94,11 @@ swift run
 ## 项目结构
 
 ```
-ClipboardManager/
 ├── Package.swift
+├── README.md
+├── README_CN.md
 └── ClipboardManager/
-    ├── ClipboardManagerApp.swift       # App 入口 & 菜单栏配置
+    ├── ClipboardManagerApp.swift       # App 入口 & 浮动面板定位逻辑
     ├── Models/
     │   └── ClipboardItem.swift         # 数据模型
     ├── Services/
@@ -98,7 +106,7 @@ ClipboardManager/
     │   ├── HotKeyManager.swift         # 全局 ⌘⇧V 快捷键（Carbon API）
     │   └── StorageManager.swift        # UserDefaults 持久化
     ├── ViewModels/
-    │   └── ClipboardViewModel.swift    # 业务逻辑
+    │   └── ClipboardViewModel.swift    # 业务逻辑 & 模拟粘贴
     └── Views/
         ├── ClipboardPanelView.swift    # 浮动历史面板
         ├── ClipboardItemRow.swift      # 列表行组件
