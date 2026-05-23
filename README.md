@@ -1,5 +1,7 @@
 # ClipboardManager
 
+[中文文档](README_CN.md)
+
 A lightweight macOS menu bar app that keeps your clipboard history, inspired by Windows' built-in clipboard history (Win+V).
 
 ![macOS](https://img.shields.io/badge/macOS-13.0%2B-blue)
