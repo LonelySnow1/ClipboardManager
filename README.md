@@ -18,7 +18,7 @@ A lightweight macOS menu bar app that keeps your clipboard history, inspired by 
 - **Menu Bar App** — Lives quietly in your menu bar, no Dock icon
 - **Quick Paste** — Click any item to paste it into the active app
 - **Search** — Filter through your clipboard history
-- **Deduplication** — Duplicate entries are automatically moved to the top
+- **Deduplication** — Duplicate entries are moved to the top after the panel is closed
 - **Persistent Storage** — History survives app restarts
 - **Native macOS** — Built with Swift & SwiftUI, lightweight and fast
 
@@ -86,6 +86,7 @@ This permission is required for:
 | Open clipboard panel | Click menu bar icon or press `⌘⇧V` |
 | Paste an item | Click on it in the panel |
 | Paste multiple items | Keep clicking — panel stays open |
+| Close panel | Press `Esc`, click outside the panel, or press `⌘⇧V` again |
 | Delete an item | Hover and click the `✕` button |
 | Search history | Type in the search field |
 | Clear all history | Click "Clear All" |

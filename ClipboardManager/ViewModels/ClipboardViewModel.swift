@@ -7,15 +7,24 @@ class ClipboardViewModel: ObservableObject {
     private let monitor = ClipboardMonitor()
     private let storage = StorageManager()
     private var isInternalCopy = false
+    private(set) var isPanelOpen = false
 
     init() {
         items = storage.load()
 
         monitor.onNewContent = { [weak self] content in
-            guard let self = self, !self.isInternalCopy else { return }
+            guard let self = self, !self.isInternalCopy, !self.isPanelOpen else { return }
             self.addItem(content: content)
         }
         monitor.start()
+    }
+
+    func panelDidOpen() {
+        isPanelOpen = true
+    }
+
+    func panelDidClose() {
+        isPanelOpen = false
     }
 
     func addItem(content: String) {

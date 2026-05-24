@@ -18,6 +18,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var viewModel = ClipboardViewModel()
     private let hotKeyManager = HotKeyManager()
     private var cachedFocusedElementPosition: NSPoint?
+    private var localKeyMonitor: Any?
+    private var globalClickMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -33,9 +35,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         hotKeyManager.onHotKey = { [weak self] in
             guard let self = self else { return }
-            self.cachedFocusedElementPosition = self.getFocusedElementPosition()
             DispatchQueue.main.async {
-                self.showPanel()
+                self.togglePanel()
             }
         }
         hotKeyManager.register()
@@ -62,15 +63,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func togglePanel() {
         guard let panel = panel else { return }
         if panel.isVisible {
-            panel.orderOut(nil)
+            dismissPanel()
         } else {
             cachedFocusedElementPosition = getFocusedElementPosition()
             showPanel()
         }
     }
 
+    func dismissPanel() {
+        panel?.orderOut(nil)
+        removeEventMonitors()
+        viewModel.panelDidClose()
+    }
+
     func showPanel() {
         guard let panel = panel else { return }
+        viewModel.panelDidOpen()
         let panelSize = panel.frame.size
         var origin: NSPoint
 
@@ -97,6 +105,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         panel.setFrameOrigin(origin)
         panel.orderFrontRegardless()
+        addEventMonitors()
+    }
+
+    private func addEventMonitors() {
+        localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            if event.keyCode == 53 {
+                self?.dismissPanel()
+                return nil
+            }
+            return event
+        }
+
+        globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            guard let self = self, let panel = self.panel else { return }
+            let mouseLocation = NSEvent.mouseLocation
+            if !panel.frame.contains(mouseLocation) {
+                self.dismissPanel()
+            }
+        }
+    }
+
+    private func removeEventMonitors() {
+        if let monitor = localKeyMonitor {
+            NSEvent.removeMonitor(monitor)
+            localKeyMonitor = nil
+        }
+        if let monitor = globalClickMonitor {
+            NSEvent.removeMonitor(monitor)
+            globalClickMonitor = nil
+        }
     }
 
     private func getFocusedElementPosition() -> NSPoint? {
