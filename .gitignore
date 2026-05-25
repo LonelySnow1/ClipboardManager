@@ -15,6 +15,7 @@ Package.resolved
 .DS_Store
 *.dSYM
 *.dSYM.zip
+*.zip
 
 # IDE
 *.xcworkspace
