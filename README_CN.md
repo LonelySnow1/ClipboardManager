@@ -13,6 +13,7 @@
 - **剪切板历史** — 自动保存最近 50 条复制的文本内容
 - **全局快捷键** — 按 `⌘⇧V` 即可呼出剪切板面板
 - **不抢焦点的浮动面板** — 面板不会从活跃输入框抢走焦点
+- **键盘导航** — 使用 `↑`/`↓` 方向键选择条目，`Enter` 执行粘贴，全程不影响目标应用的焦点
 - **智能定位** — 面板自动出现在当前聚焦输入框附近，像 Windows 剪切板一样
 - **连续粘贴** — 粘贴后面板保持打开，可依次粘贴多条内容
 - **菜单栏驻留** — 安静地住在菜单栏，不占用 Dock
@@ -84,8 +85,10 @@ swift run
 | 操作 | 方式 |
 |------|------|
 | 呼出剪切板面板 | 点击菜单栏图标 或 按 `⌘⇧V` |
-| 粘贴历史条目 | 点击对应条目 |
-| 连续粘贴多条 | 持续点击 — 面板保持打开 |
+| 选择条目 | 使用 `↑`/`↓` 方向键 |
+| 粘贴选中条目 | 按 `Enter` |
+| 点击粘贴 | 点击对应条目 |
+| 连续粘贴多条 | 持续选择并按 Enter — 面板保持打开 |
 | 关闭面板 | 按 `Esc`、点击面板外部、或再次按 `⌘⇧V` |
 | 删除某条记录 | 鼠标悬停后点击 `✕` |
 | 搜索历史记录 | 在搜索框中输入关键词 |
@@ -104,7 +107,8 @@ swift run
     │   └── ClipboardItem.swift         # 数据模型
     ├── Services/
     │   ├── ClipboardMonitor.swift      # 剪切板轮询监控（0.5s 间隔）
-    │   ├── HotKeyManager.swift         # 全局 ⌘⇧V 快捷键（Carbon API）
+    │   ├── HotKeyManager.swift         # 全局 ⌘⇧V 快捷键（CGEvent tap）
+    │   ├── PanelKeyHandler.swift       # 键盘导航（CGEvent tap 拦截 ↑↓/Enter/Esc）
     │   └── StorageManager.swift        # UserDefaults 持久化
     ├── ViewModels/
     │   └── ClipboardViewModel.swift    # 业务逻辑 & 模拟粘贴

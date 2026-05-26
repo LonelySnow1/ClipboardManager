@@ -13,6 +13,7 @@ A lightweight macOS menu bar app that keeps your clipboard history, inspired by 
 - **Clipboard History** — Automatically saves your last 50 copied text items
 - **Global Hotkey** — Press `⌘⇧V` to instantly bring up the clipboard panel
 - **Non-activating Floating Panel** — Panel does not steal focus from the active input field
+- **Keyboard Navigation** — Use `↑`/`↓` arrow keys to select items and `Enter` to paste, without losing focus on the target app
 - **Position Near Input** — Panel appears next to the focused input element, like Windows clipboard
 - **Continuous Paste** — Panel stays open after pasting, allowing multiple items to be pasted in sequence
 - **Menu Bar App** — Lives quietly in your menu bar, no Dock icon
@@ -84,8 +85,10 @@ This permission is required for:
 | Action | How |
 |--------|-----|
 | Open clipboard panel | Click menu bar icon or press `⌘⇧V` |
-| Paste an item | Click on it in the panel |
-| Paste multiple items | Keep clicking — panel stays open |
+| Select item | Use `↑`/`↓` arrow keys |
+| Paste selected item | Press `Enter` |
+| Paste an item by click | Click on it in the panel |
+| Paste multiple items | Keep selecting and pressing Enter — panel stays open |
 | Close panel | Press `Esc`, click outside the panel, or press `⌘⇧V` again |
 | Delete an item | Hover and click the `✕` button |
 | Search history | Type in the search field |
@@ -103,7 +106,8 @@ This permission is required for:
     │   └── ClipboardItem.swift         # Data model
     ├── Services/
     │   ├── ClipboardMonitor.swift      # Pasteboard polling (0.5s interval)
-    │   ├── HotKeyManager.swift         # Global ⌘⇧V hotkey (Carbon API)
+    │   ├── HotKeyManager.swift         # Global ⌘⇧V hotkey (CGEvent tap)
+    │   ├── PanelKeyHandler.swift       # Keyboard navigation (CGEvent tap for ↑↓/Enter/Esc)
     │   └── StorageManager.swift        # UserDefaults persistence
     ├── ViewModels/
     │   └── ClipboardViewModel.swift    # Business logic & paste simulation
