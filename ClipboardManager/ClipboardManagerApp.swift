@@ -18,8 +18,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var viewModel = ClipboardViewModel()
     private let hotKeyManager = HotKeyManager()
     private let panelKeyHandler = PanelKeyHandler()
-    private var cachedFocusedElementPosition: NSPoint?
+    private var cachedFocusedElementRect: NSRect?
     private var cachedFrontmostPID: pid_t?
+    private var cachedFrontmostWindowFrame: NSRect?
     private var globalClickMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -68,7 +69,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             dismissPanel()
         } else {
             cachedFrontmostPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
-            cachedFocusedElementPosition = getFocusedElementPosition()
+            cachedFocusedElementRect = getFocusedElementRect()
+            cachedFrontmostWindowFrame = getFrontmostWindowFrame()
             viewModel.targetPID = cachedFrontmostPID
             showPanel()
         }
@@ -85,28 +87,47 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let panel = panel else { return }
         viewModel.panelDidOpen()
         let panelSize = panel.frame.size
+        let spacing: CGFloat = 4
+
+        let screen = NSScreen.screens.first(where: { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) }) ?? NSScreen.main
+        let visibleFrame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+
         var origin: NSPoint
 
-        if let pos = cachedFocusedElementPosition {
+        if let elementRect = cachedFocusedElementRect {
+            let spaceBelow = elementRect.minY - visibleFrame.minY
+            let spaceAbove = visibleFrame.maxY - elementRect.maxY
+
+            if spaceBelow >= panelSize.height + spacing {
+                origin = NSPoint(
+                    x: elementRect.minX,
+                    y: elementRect.minY - panelSize.height - spacing
+                )
+            } else if spaceAbove >= panelSize.height + spacing {
+                origin = NSPoint(
+                    x: elementRect.minX,
+                    y: elementRect.maxY + spacing
+                )
+            } else {
+                origin = NSPoint(
+                    x: elementRect.minX,
+                    y: elementRect.minY - panelSize.height - spacing
+                )
+            }
+        } else if let windowFrame = cachedFrontmostWindowFrame {
             origin = NSPoint(
-                x: pos.x,
-                y: pos.y - panelSize.height
+                x: windowFrame.midX - panelSize.width / 2,
+                y: windowFrame.midY - panelSize.height / 2
             )
         } else {
-            let mouseLocation = NSEvent.mouseLocation
             origin = NSPoint(
-                x: mouseLocation.x - panelSize.width / 2,
-                y: mouseLocation.y - panelSize.height
+                x: visibleFrame.midX - panelSize.width / 2,
+                y: visibleFrame.midY - panelSize.height / 2
             )
         }
 
-        if let screen = NSScreen.screens.first(where: { $0.frame.contains(origin) }) ?? NSScreen.main {
-            let visibleFrame = screen.visibleFrame
-            if origin.x < visibleFrame.minX { origin.x = visibleFrame.minX }
-            if origin.x + panelSize.width > visibleFrame.maxX { origin.x = visibleFrame.maxX - panelSize.width }
-            if origin.y < visibleFrame.minY { origin.y = visibleFrame.minY }
-            if origin.y + panelSize.height > visibleFrame.maxY { origin.y = visibleFrame.maxY - panelSize.height }
-        }
+        origin.x = max(visibleFrame.minX, min(origin.x, visibleFrame.maxX - panelSize.width))
+        origin.y = max(visibleFrame.minY, min(origin.y, visibleFrame.maxY - panelSize.height))
 
         panel.setFrameOrigin(origin)
         panel.orderFrontRegardless()
@@ -138,7 +159,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func getFocusedElementPosition() -> NSPoint? {
+    private func getFocusedElementRect() -> NSRect? {
         guard let focusedApp = NSWorkspace.shared.frontmostApplication else { return nil }
         let pid = focusedApp.processIdentifier
         let appElement = AXUIElementCreateApplication(pid)
@@ -167,6 +188,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let screenHeight = screen.frame.height
         let flippedY = screenHeight - position.y - size.height
 
-        return NSPoint(x: position.x, y: flippedY)
+        return NSRect(x: position.x, y: flippedY, width: size.width, height: size.height)
+    }
+
+    private func getFrontmostWindowFrame() -> NSRect? {
+        guard let focusedApp = NSWorkspace.shared.frontmostApplication else { return nil }
+        let pid = focusedApp.processIdentifier
+        let appElement = AXUIElementCreateApplication(pid)
+
+        var windowsRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(appElement, kAXWindowsAttribute as CFString, &windowsRef) == .success,
+              let windows = windowsRef as? [AXUIElement],
+              let frontWindow = windows.first else {
+            return nil
+        }
+
+        var positionRef: CFTypeRef?
+        var sizeRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(frontWindow, kAXPositionAttribute as CFString, &positionRef) == .success,
+              AXUIElementCopyAttributeValue(frontWindow, kAXSizeAttribute as CFString, &sizeRef) == .success else {
+            return nil
+        }
+
+        var position = CGPoint.zero
+        var size = CGSize.zero
+        guard AXValueGetValue(positionRef as! AXValue, .cgPoint, &position),
+              AXValueGetValue(sizeRef as! AXValue, .cgSize, &size) else {
+            return nil
+        }
+
+        guard let screen = NSScreen.main else { return nil }
+        let screenHeight = screen.frame.height
+        let flippedY = screenHeight - position.y - size.height
+
+        return NSRect(x: position.x, y: flippedY, width: size.width, height: size.height)
     }
 }

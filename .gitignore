@@ -31,6 +31,7 @@ Package.resolved
 # Misc
 *.swp
 *~
+.agents/
 .vscode/
 .idea/
 .neeko/

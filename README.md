@@ -14,7 +14,7 @@ A lightweight macOS menu bar app that keeps your clipboard history, inspired by 
 - **Global Hotkey** — Press `⌘⇧V` to instantly bring up the clipboard panel
 - **Non-activating Floating Panel** — Panel does not steal focus from the active input field
 - **Keyboard Navigation** — Use `↑`/`↓` arrow keys to select items and `Enter` to paste, without losing focus on the target app
-- **Position Near Input** — Panel appears next to the focused input element, like Windows clipboard
+- **Smart Panel Positioning** — Panel appears below the focused input field (flips above if space is insufficient), falls back to frontmost window center, then screen center
 - **Continuous Paste** — Panel stays open after pasting, allowing multiple items to be pasted in sequence
 - **Menu Bar App** — Lives quietly in your menu bar, no Dock icon
 - **Quick Paste** — Click any item to paste it into the active app
