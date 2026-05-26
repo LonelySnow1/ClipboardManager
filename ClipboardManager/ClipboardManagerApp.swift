@@ -17,8 +17,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var panel: NSPanel?
     var viewModel = ClipboardViewModel()
     private let hotKeyManager = HotKeyManager()
+    private let panelKeyHandler = PanelKeyHandler()
     private var cachedFocusedElementPosition: NSPoint?
-    private var localKeyMonitor: Any?
+    private var cachedFrontmostPID: pid_t?
     private var globalClickMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -32,6 +33,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         setupPanel()
+        setupPanelKeyHandler()
 
         hotKeyManager.onHotKey = { [weak self] in
             guard let self = self else { return }
@@ -65,13 +67,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if panel.isVisible {
             dismissPanel()
         } else {
+            cachedFrontmostPID = NSWorkspace.shared.frontmostApplication?.processIdentifier
             cachedFocusedElementPosition = getFocusedElementPosition()
+            viewModel.targetPID = cachedFrontmostPID
             showPanel()
         }
     }
 
     func dismissPanel() {
         panel?.orderOut(nil)
+        panelKeyHandler.disable()
         removeEventMonitors()
         viewModel.panelDidClose()
     }
@@ -105,18 +110,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         panel.setFrameOrigin(origin)
         panel.orderFrontRegardless()
+        panelKeyHandler.enable()
         addEventMonitors()
     }
 
-    private func addEventMonitors() {
-        localKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.keyCode == 53 {
-                self?.dismissPanel()
-                return nil
-            }
-            return event
-        }
+    private func setupPanelKeyHandler() {
+        panelKeyHandler.onMoveUp = { [weak self] in self?.viewModel.moveSelectionUp() }
+        panelKeyHandler.onMoveDown = { [weak self] in self?.viewModel.moveSelectionDown() }
+        panelKeyHandler.onConfirm = { [weak self] in self?.viewModel.confirmSelection() }
+        panelKeyHandler.onDismiss = { [weak self] in self?.dismissPanel() }
+    }
 
+    private func addEventMonitors() {
         globalClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             guard let self = self, let panel = self.panel else { return }
             let mouseLocation = NSEvent.mouseLocation
@@ -127,10 +132,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func removeEventMonitors() {
-        if let monitor = localKeyMonitor {
-            NSEvent.removeMonitor(monitor)
-            localKeyMonitor = nil
-        }
         if let monitor = globalClickMonitor {
             NSEvent.removeMonitor(monitor)
             globalClickMonitor = nil

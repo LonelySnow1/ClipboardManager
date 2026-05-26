@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ClipboardItemRow: View {
     let item: ClipboardItem
+    let isSelected: Bool
     let onSelect: () -> Void
     let onDelete: () -> Void
 
@@ -33,7 +34,7 @@ struct ClipboardItemRow: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
+        .background(isSelected ? Color.accentColor.opacity(0.2) : (isHovered ? Color.accentColor.opacity(0.1) : Color.clear))
         .cornerRadius(6)
         .onHover { hovering in
             isHovered = hovering

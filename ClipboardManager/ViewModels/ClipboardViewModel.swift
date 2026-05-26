@@ -3,6 +3,19 @@ import AppKit
 
 class ClipboardViewModel: ObservableObject {
     @Published var items: [ClipboardItem] = []
+    @Published var selectedIndex: Int = 0
+    @Published var searchText: String = ""
+
+    var filteredItems: [ClipboardItem] {
+        if searchText.isEmpty {
+            return items
+        }
+        return items.filter {
+            $0.content.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    var targetPID: pid_t?
 
     private let monitor = ClipboardMonitor()
     private let storage = StorageManager()
@@ -21,10 +34,32 @@ class ClipboardViewModel: ObservableObject {
 
     func panelDidOpen() {
         isPanelOpen = true
+        selectedIndex = 0
+        searchText = ""
     }
 
     func panelDidClose() {
         isPanelOpen = false
+        selectedIndex = 0
+        searchText = ""
+    }
+
+    func moveSelectionUp() {
+        if selectedIndex > 0 {
+            selectedIndex -= 1
+        }
+    }
+
+    func moveSelectionDown() {
+        if selectedIndex < filteredItems.count - 1 {
+            selectedIndex += 1
+        }
+    }
+
+    func confirmSelection() {
+        let items = filteredItems
+        guard !items.isEmpty, selectedIndex >= 0, selectedIndex < items.count else { return }
+        selectItem(items[selectedIndex])
     }
 
     func addItem(content: String) {
@@ -53,7 +88,6 @@ class ClipboardViewModel: ObservableObject {
 
         simulatePaste()
     }
-
     func deleteItem(_ item: ClipboardItem) {
         items.removeAll { $0.id == item.id }
         storage.save(items)
@@ -65,16 +99,23 @@ class ClipboardViewModel: ObservableObject {
     }
 
     private func simulatePaste() {
+        let pid = targetPID
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             let source = CGEventSource(stateID: .hidSystemState)
 
             let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true)
             keyDown?.flags = .maskCommand
-            keyDown?.post(tap: .cghidEventTap)
 
             let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)
             keyUp?.flags = .maskCommand
-            keyUp?.post(tap: .cghidEventTap)
+
+            if let pid = pid {
+                keyDown?.postToPid(pid)
+                keyUp?.postToPid(pid)
+            } else {
+                keyDown?.post(tap: .cghidEventTap)
+                keyUp?.post(tap: .cghidEventTap)
+            }
         }
     }
 }
